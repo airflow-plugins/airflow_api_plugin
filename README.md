@@ -9,7 +9,7 @@ that the API will have behavior differences from UI.
 
 
 # Troubleshooting
-## The scheulder fails to start when usnig this plugin
+## The scheduler fails to start when using this plugin
 This has been experiences when Airflow is configured to use a plugin executor.
 For CSRF this plugin imports `airflow/www/app.py`, which happen to also import `airflow/jobs`.
 When the scheduler starts, it will import `airflow/jobs` which will import the plugin
@@ -23,17 +23,40 @@ however that isn't in stock Airflow, therefore this is being documented as a kno
 
 # API Reference
 
-## Response
+
+## General Info
+
+### Authentication
+By default authentication is disabled.  Currently only basic token authentication is supported.
+
+Authentication can be enabled either via:
+
+**Config**
+
+```
+[airflow_api_plugin]
+airflow_api_auth=**secret token**
+```
+
+**Environment variable**
+
+`AIRFLOW__AIRFLOW__API__PLUGIN_AIRFLOW_API_AUTH=**secret token**`
+
+Once configured, a request simply has to pass an  `authorization` header with the value being the secret.
+ie. `authorization: **secret token**`. If the config/env is set and the header doesn't match, the request will be denied
+
+
+### Responses
 All responses will have a json object with a `response` key, and a value that is always an object. ie:
 ```
 {
   "response": { /* payload of data */ }
 }
 ```
-### Success
+#### Success
 Success responses will vary depending on the endpoint. See the example success responses below for the specifics of the response values
 
-### Error
+#### Error
 All error response values will be of the form
 ```
 {
@@ -43,21 +66,24 @@ All error response values will be of the form
 }
 ```
 
-# Endpoints
+## Endpoints
 
-## Dag Endpoints
+### Dag Endpoints
 
-### List
+#### List
 Returns a list of dags currently in the DagBag along with additional information like the active status and last execution time
 
-#### Request
+**Request**
+
 `GET` `/api/v1/dags`
 
-#### Parameters
+
+**Parameters**
 
 None
 
-#### Success Response
+**Success Response**
+
 ```
 {
   "response": {
@@ -74,15 +100,16 @@ None
 }
 ```
 
-## Dag Run Endpoints
+### Dag Run Endpoints
 
-### List
+#### List
 Returns a list of dag runs, up to 100 per request.  It can be filtered by a start run id, state, and/or prefix.
 
-#### Request
+**Request**
+
 `GET` `/api/v1/dag_runs`
 
-#### Parameters
+**Parameters**
 
 | Key              | Method | Required? | Type    | Default | Descripton                                                                                                                   |
 |------------------|--------|-----------|---------|---------|------------------------------------------------------------------------------------------------------------------------------|
@@ -92,7 +119,8 @@ Returns a list of dag runs, up to 100 per request.  It can be filtered by a star
 | external_trigger | Query  | No        | Boolean |         | Filter dag runs by whether or not they were triggered internally (ie by the scheduler) or externally (ie this API or the CLI |
 | prefix           | Query  | No        | String  |         | Filter dag runs to only the runs with a `run_id` containing the full prefix specified                                        |
 
-#### Success Response
+**Success Response**
+
 ```
 {
   "response": {
@@ -111,16 +139,17 @@ Returns a list of dag runs, up to 100 per request.  It can be filtered by a star
 }
 ```
 
-### Create
+#### Create
 Creates a dag run object for each run specified in the payload.  Dag runs will be added to the database and executed by the scheduler at some point in the future. The resulting dag run id's will be return on success.
 
 The prefix pattern allows for groups of dag run to be created and queried later on.  This is useful in backfill operations as they will happen asynchronously
 Each dag run created will increment a number after the prefix, followed by the start date of the run.
 
-#### Request
+**Request**
+
 `POST` `/api/v1/dag_runs/<dag_run_id>`
 
-#### Parameters
+**Parameters**
 
 | Key        | Method | Required? | Type          | Default | Descripton                                                                                                                                                                        |
 |------------|--------|-----------|---------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -132,7 +161,8 @@ Each dag run created will increment a number after the prefix, followed by the s
 | partial    | Post   | No        | Boolean       | false   | Whether or not a partial batch can be created. If true, and the number of dag runs that would be created between the start and end exceeds the limit, no dag runs will be created |
 | conf       | Post   | No        | String, JSON  |         | JSON configuration added to the DagRun's conf attribute                                                                                                                           |
 
-#### Success Response
+**Success Response**
+
 ```
 {
   "response": {
@@ -147,17 +177,19 @@ Each dag run created will increment a number after the prefix, followed by the s
 }
 ```
 
-### Get
+#### Get
 Returns information on a specific dag run
 
-#### Request
+**Request**
+
 `GET` `/api/v1/dag_runs/<dag_run_id>`
 
-#### Parameters
+**Parameters**
 
 None
 
-#### Success Response
+**Success Response**
+
 ```
 {
   "response": {
@@ -173,7 +205,8 @@ None
 }
 ```
 
-#### Failure Response
+**Failure Response**
+
 ```
 {
   "response": {
