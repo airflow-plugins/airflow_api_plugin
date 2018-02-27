@@ -1,0 +1,1 @@
+from airflow_api_plugin.blueprints.airflow_api import airflow_api_blueprint
