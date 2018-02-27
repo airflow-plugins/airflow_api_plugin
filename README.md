@@ -51,7 +51,7 @@ All error response values will be of the form
 Returns a list of dags currently in the DagBag along with additional information like the active status and last execution time
 
 #### Request
-`GET` `/astro/dags`
+`GET` `/api/v1/dags`
 
 #### Parameters
 
@@ -80,7 +80,7 @@ None
 Returns a list of dag runs, up to 100 per request.  It can be filtered by a start run id, state, and/or prefix.
 
 #### Request
-`GET` `/astro/dag_runs`
+`GET` `/api/v1/dag_runs`
 
 #### Parameters
 
@@ -118,7 +118,7 @@ The prefix pattern allows for groups of dag run to be created and queried later 
 Each dag run created will increment a number after the prefix, followed by the start date of the run.
 
 #### Request
-`POST` `/astro/dag_runs/<dag_run_id>`
+`POST` `/api/v1/dag_runs/<dag_run_id>`
 
 #### Parameters
 
@@ -151,7 +151,7 @@ Each dag run created will increment a number after the prefix, followed by the s
 Returns information on a specific dag run
 
 #### Request
-`GET` `/astro/dag_runs/<dag_run_id>`
+`GET` `/api/v1/dag_runs/<dag_run_id>`
 
 #### Parameters
 
