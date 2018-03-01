@@ -147,7 +147,7 @@ Each dag run created will increment a number after the prefix, followed by the s
 
 **Request**
 
-`POST` `/api/v1/dag_runs/<dag_run_id>`
+`POST` `/api/v1/dag_runs`
 
 **Parameters**
 
