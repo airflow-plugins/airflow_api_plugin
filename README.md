@@ -45,6 +45,21 @@ airflow_api_auth=**secret token**
 Once configured, a request simply has to pass an  `authorization` header with the value being the secret.
 ie. `authorization: **secret token**`. If the config/env is set and the header doesn't match, the request will be denied
 
+### Body
+Data sent in the body of a POST request will need to be formatted as raw JSON, not multipart or form data.
+
+#### Correct:
+```
+POST  `/api/v1/dag_runs`
+{"dag_id":"example_dag","prefix":"prefix_value"}
+```
+
+#### Incorrect:
+```
+POST  `/api/v1/dag_runs`
+dag_id=example_dag&prefix=prefixvalue
+```
+
 
 ### Responses
 All responses will have a json object with a `response` key, and a value that is always an object. ie:
