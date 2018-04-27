@@ -10,7 +10,7 @@ that the API will have behavior differences from UI.
 
 # Troubleshooting
 ## The scheduler fails to start when using this plugin
-This has been experiences when Airflow is configured to use a plugin executor.
+This has been experienced when Airflow is configured to use a plugin executor.
 For CSRF this plugin imports `airflow/www/app.py`, which happen to also import `airflow/jobs`.
 When the scheduler starts, it will import `airflow/jobs` which will import the plugin
 executor.  This creates a circular import, crashing the scheduler.  At Astronomer we fixed
