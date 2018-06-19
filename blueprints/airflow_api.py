@@ -8,10 +8,11 @@ from flask import Blueprint, request, Response
 from sqlalchemy import or_
 from airflow import settings
 from airflow.exceptions import AirflowException, AirflowConfigException
-from airflow.models import DagBag, DagRun
+from airflow.models import DagBag, DagRun, DagModel
 from airflow.utils.state import State
 from airflow.utils.dates import date_range as utils_date_range
 from airflow.www.app import csrf
+from airflow.bin.cli import pause, unpause, get_dag as cli_get_dag
 
 airflow_api_blueprint = Blueprint('airflow_api', __name__, url_prefix='/api/v1')
 
@@ -64,6 +65,13 @@ class ApiResponse:
     @staticmethod
     def server_error(error='An unexpected problem occurred'):
         return ApiResponse.error(ApiResponse.STATUS_SERVER_ERROR, error)
+
+
+class CliArgs:
+    def __init__(self, dag_id, subdir):
+        self.subdir = subdir
+        self.dag_id = dag_id
+
 
 @airflow_api_blueprint.before_request
 def verify_authentication():
@@ -120,6 +128,55 @@ def dags_index():
 
     return ApiResponse.success({'dags': dags})
 
+@csrf.exempt
+@airflow_api_blueprint.route('/dags/<dag_id>', methods=['PUT'])
+def dag_update(dag_id):
+    args = CliArgs(dag_id, 'dags')
+    try:
+        dag = cli_get_dag(args)
+    except AirflowException:
+        return ApiResponse.not_found('Could not find a dag with ID {}'.format(dag_id))
+
+    body = request.get_json()
+    if body is None or 'is_active' not in body:
+        return ApiResponse.bad_request("A Json body with 'is_active': True/False is expected")
+
+    try:
+        if body['is_active']:
+            unpause(None, dag)
+        elif not body['is_active']:
+            pause(None, dag)
+    except AirflowException:
+        return ApiResponse.not_found('Could not pause/unpause dag with ID {}'.format(dag_id))
+
+    payload = {
+        'dag_id': dag_id,
+        'full_path': dag.full_filepath,
+        'is_active': (not dag.is_paused),
+        'last_execution': str(dag.latest_execution_date)
+    }
+
+    return ApiResponse.success(payload)
+
+
+@airflow_api_blueprint.route('/dags/<dag_id>', methods=['GET'])
+def get_dag(dag_id):
+    args = CliArgs(dag_id, 'dags')
+
+    try:
+        dag = cli_get_dag(args)
+    except AirflowException:
+        return ApiResponse.not_found('Could not find a dag with ID {}'.format(dag_id))
+
+    payload = {
+        'dag_id': dag_id,
+        'full_path': dag.full_filepath,
+        'is_active': (not dag.is_paused),
+        'last_execution': str(dag.latest_execution_date)
+    }
+
+    return ApiResponse.success(payload)
+
 
 @airflow_api_blueprint.route('/dag_runs', methods=['GET'])
 def get_dag_runs():
@@ -147,6 +204,7 @@ def get_dag_runs():
     session.close()
 
     return ApiResponse.success({'dag_runs': dag_runs})
+
 
 @csrf.exempt
 @airflow_api_blueprint.route('/dag_runs', methods=['POST'])
