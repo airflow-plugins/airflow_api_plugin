@@ -290,7 +290,7 @@ def get_dag_run(dag_run_id):
 # However in the dashboard the main dag will show that as a failure. Adding the dag_name will resolve this
 
 @airflow_api_blueprint.route('/dags/dag_runs/', methods=['GET'])
-def get_dag_run():
+def get_dag_run_with_dag():
     session = settings.Session()
     run_id=request.args.get('run_id')
     dag_id=request.args.get('dag_id')
