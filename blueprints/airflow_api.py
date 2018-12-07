@@ -285,3 +285,23 @@ def get_dag_run(dag_run_id):
     session.close()
 
     return ApiResponse.success({'dag_run': format_dag_run(dag_run)})
+
+# When using a subdagoperator if a downstream task fails this method still returns the status of the run_id as running
+# However in the dashboard the main dag will show that as a failure. Adding the dag_name will resolve this
+
+@airflow_api_blueprint.route('/dags/dag_runs/', methods=['GET'])
+def get_dag_run():
+    session = settings.Session()
+    run_id=request.args.get('run_id')
+    dag_id=request.args.get('dag_id')
+
+    runs = DagRun.find(dag_id=dag_id , run_id=run_id, session=session)
+
+    if len(runs) == 0:
+        return ApiResponse.not_found('Dag run not found')
+
+    dag_run = runs[0]
+
+    session.close()
+
+    return ApiResponse.success({'dag_run': format_dag_run(dag_run)})
