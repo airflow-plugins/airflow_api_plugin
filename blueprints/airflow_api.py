@@ -99,7 +99,7 @@ def find_dag_runs(session, dag_id, dag_run_id, execution_date):
 
 @airflow_api_blueprint.route('/dags', methods=['GET'])
 def dags_index():
-    dagbag = DagBag('dags')
+    dagbag = DagBag()
     dags = []
     for dag_id in dagbag.dags:
         payload = {
@@ -216,7 +216,7 @@ def create_dag_run():
     try:
         session = settings.Session()
 
-        dagbag = DagBag('dags')
+        dagbag = DagBag()
 
         if dag_id not in dagbag.dags:
             return ApiResponse.bad_request("Dag id {} not found".format(dag_id))
