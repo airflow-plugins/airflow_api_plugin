@@ -133,6 +133,7 @@ Returns a list of dag runs, up to 100 per request.  It can be filtered by a star
 | state            | Query  | No        | String  |         | Filter dag runs by a specified state                                                                                         |
 | external_trigger | Query  | No        | Boolean |         | Filter dag runs by whether or not they were triggered internally (ie by the scheduler) or externally (ie this API or the CLI |
 | prefix           | Query  | No        | String  |         | Filter dag runs to only the runs with a `run_id` containing the full prefix specified                                        |
+| dag_id           | Query  | No        | String  |         | Filter dag runs to only the runs with `dag_id`                                                                               |
 
 **Success Response**
 

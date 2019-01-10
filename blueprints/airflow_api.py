@@ -139,6 +139,9 @@ def get_dag_runs():
     if request.args.get('prefix') is not None:
         query = query.filter(DagRun.run_id.ilike('{}%'.format(request.args.get('prefix'))))
 
+    if request.args.get('dag_id') is not None:
+        query = query.filter(DagRun.dag_id == request.args.get('dag_id'))
+
     runs = query.order_by(DagRun.execution_date).all()
 
     for run in runs:
