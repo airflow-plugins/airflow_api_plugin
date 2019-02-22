@@ -12,6 +12,7 @@ from airflow.models import DagBag, DagRun
 from airflow.utils.state import State
 from airflow.utils.dates import date_range as utils_date_range
 from airflow.www.app import csrf
+import urllib
 
 airflow_api_blueprint = Blueprint('airflow_api', __name__, url_prefix='/api/v1')
 
@@ -77,6 +78,14 @@ def verify_authentication():
         return ApiResponse.unauthorized("You are not authorized to use this resource")
 
 
+def format_url(execution_date, dag_id):
+    encoded_execution_date = '+'.join(urllib.quote(execution_date).split('T'))
+    encoded_dag_id = urllib.quote(dag_id)
+    return '/admin/airflow/graph?execution_date={execution_date}&dag_id={dag_id}'.format(
+        dag_id=encoded_dag_id,
+        execution_date=encoded_execution_date)
+
+
 def format_dag_run(dag_run):
     return {
         'run_id': dag_run.run_id,
@@ -85,7 +94,8 @@ def format_dag_run(dag_run):
         'start_date': (None if not dag_run.start_date else str(dag_run.start_date)),
         'end_date': (None if not dag_run.end_date else str(dag_run.end_date)),
         'external_trigger': dag_run.external_trigger,
-        'execution_date': str(dag_run.execution_date)
+        'execution_date': str(dag_run.execution_date),
+        'dag_run_url': format_url(str(dag_run.execution_date), dag_run.dag_id)
     }
 
 
@@ -138,6 +148,9 @@ def get_dag_runs():
 
     if request.args.get('prefix') is not None:
         query = query.filter(DagRun.run_id.ilike('{}%'.format(request.args.get('prefix'))))
+
+    if request.args.get('dag_id') is not None:
+        query = query.filter(DagRun.dag_id == request.args.get('dag_id'))
 
     runs = query.order_by(DagRun.execution_date).all()
 
@@ -270,18 +283,3 @@ def create_dag_run():
 
     return ApiResponse.success({'dag_run_ids': results})
 
-
-@airflow_api_blueprint.route('/dag_runs/<dag_run_id>', methods=['GET'])
-def get_dag_run(dag_run_id):
-    session = settings.Session()
-
-    runs = DagRun.find(run_id=dag_run_id, session=session)
-
-    if len(runs) == 0:
-        return ApiResponse.not_found('Dag run not found')
-
-    dag_run = runs[0]
-
-    session.close()
-
-    return ApiResponse.success({'dag_run': format_dag_run(dag_run)})
